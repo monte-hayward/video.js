@@ -15,10 +15,22 @@ import formatTime from '../../utils/format-time.js';
  */
 class PlayProgressBar extends Component {
 
-  constructor(player, options){
+  constructor(player, options) {
     super(player, options);
+    this.updateDataAttr();
     this.on(player, 'timeupdate', this.updateDataAttr);
     player.ready(Fn.bind(this, this.updateDataAttr));
+
+    if (options.playerOptions &&
+        options.playerOptions.controlBar &&
+        options.playerOptions.controlBar.progressControl &&
+        options.playerOptions.controlBar.progressControl.keepTooltipsInside) {
+      this.keepTooltipsInside = options.playerOptions.controlBar.progressControl.keepTooltipsInside;
+    }
+
+    if (this.keepTooltipsInside) {
+      this.addClass('vjs-keep-tooltips-inside');
+    }
   }
 
   /**
@@ -29,13 +41,14 @@ class PlayProgressBar extends Component {
    */
   createEl() {
     return super.createEl('div', {
-      className: 'vjs-play-progress',
+      className: 'vjs-play-progress vjs-slider-bar',
       innerHTML: `<span class="vjs-control-text"><span>${this.localize('Progress')}</span>: 0%</span>`
     });
   }
 
   updateDataAttr() {
-    let time = (this.player_.scrubbing()) ? this.player_.getCache().currentTime : this.player_.currentTime();
+    const time = (this.player_.scrubbing()) ? this.player_.getCache().currentTime : this.player_.currentTime();
+
     this.el_.setAttribute('data-current-time', formatTime(time, this.player_.duration()));
   }
 

@@ -1,6 +1,16 @@
+@import "utilities/linear-gradient";
+
 @mixin background-color-with-alpha($color, $alpha) {
   background-color: $color;
   background-color: rgba($color, $alpha);
+}
+
+@mixin transform($transform) {
+  -moz-transform: $transform;
+  -ms-transform: $transform;
+  -o-transform: $transform;
+  -webkit-transform: $transform;
+  transform: $transform;
 }
 
 @mixin transition($string: $transition--default) {
@@ -76,7 +86,7 @@
   -webkit-user-select: $string;
   -moz-user-select: $string;
   -ms-user-select: $string;
-  user-select: $string
+  user-select: $string;
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow
@@ -94,11 +104,15 @@
   order: $value;
 }
 
-%icon-default {
+%fill-parent {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+}
+
+%icon-default {
+  @extend %fill-parent;
   text-align: center;
 }

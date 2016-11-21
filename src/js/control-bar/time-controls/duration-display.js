@@ -15,14 +15,14 @@ import formatTime from '../../utils/format-time.js';
  */
 class DurationDisplay extends Component {
 
-  constructor(player, options){
+  constructor(player, options) {
     super(player, options);
 
-    // this might need to be changed to 'durationchange' instead of 'timeupdate' eventually,
-    // however the durationchange event fires before this.player_.duration() is set,
-    // so the value cannot be written out using this method.
-    // Once the order of durationchange and this.player_.duration() being set is figured out,
-    // this can be updated.
+    this.on(player, 'durationchange', this.updateContent);
+
+    // Also listen for timeupdate and loadedmetadata because removing those
+    // listeners could have broken dependent applications/libraries. These
+    // can likely be removed for 6.0.
     this.on(player, 'timeupdate', this.updateContent);
     this.on(player, 'loadedmetadata', this.updateContent);
   }
@@ -34,14 +34,17 @@ class DurationDisplay extends Component {
    * @method createEl
    */
   createEl() {
-    let el = super.createEl('div', {
+    const el = super.createEl('div', {
       className: 'vjs-duration vjs-time-control vjs-control'
     });
 
     this.contentEl_ = Dom.createEl('div', {
       className: 'vjs-duration-display',
-      innerHTML: `<span class="vjs-control-text">${this.localize('Duration Time')}</span> 0:00`, // label the duration time for screen reader users
-      'aria-live': 'off' // tell screen readers not to automatically read the time as it changes
+      // label the duration time for screen reader users
+      innerHTML: `<span class="vjs-control-text">${this.localize('Duration Time')}</span> 0:00`
+    }, {
+      // tell screen readers not to automatically read the time as it changes
+      'aria-live': 'off'
     });
 
     el.appendChild(this.contentEl_);
@@ -49,16 +52,20 @@ class DurationDisplay extends Component {
   }
 
   /**
-   * Update duration time display   
+   * Update duration time display
    *
    * @method updateContent
    */
   updateContent() {
-    let duration = this.player_.duration();
-    if (duration) {
-      let localizedText = this.localize('Duration Time');
-      let formattedTime = formatTime(duration);
-      this.contentEl_.innerHTML = `<span class="vjs-control-text">${localizedText}</span> ${formattedTime}`; // label the duration time for screen reader users
+    const duration = this.player_.duration();
+
+    if (duration && this.duration_ !== duration) {
+      this.duration_ = duration;
+      const localizedText = this.localize('Duration Time');
+      const formattedTime = formatTime(duration);
+
+      // label the duration time for screen reader users
+      this.contentEl_.innerHTML = `<span class="vjs-control-text">${localizedText}</span> ${formattedTime}`;
     }
   }
 

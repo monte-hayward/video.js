@@ -6,7 +6,7 @@ import Component from '../../component.js';
 import * as Fn from '../../utils/fn.js';
 
 // Required children
-import VolumeLevel from './volume-level.js';
+import './volume-level.js';
 
 /**
  * The bar that contains the volume level and can be clicked on to adjust the level
@@ -18,7 +18,7 @@ import VolumeLevel from './volume-level.js';
  */
 class VolumeBar extends Slider {
 
-  constructor(player, options){
+  constructor(player, options) {
     super(player, options);
     this.on(player, 'volumechange', this.updateARIAAttributes);
     player.ready(Fn.bind(this, this.updateARIAAttributes));
@@ -32,7 +32,8 @@ class VolumeBar extends Slider {
    */
   createEl() {
     return super.createEl('div', {
-      className: 'vjs-volume-bar',
+      className: 'vjs-volume-bar vjs-slider-bar'
+    }, {
       'aria-label': 'volume level'
     });
   }
@@ -43,11 +44,14 @@ class VolumeBar extends Slider {
    * @method handleMouseMove
    */
   handleMouseMove(event) {
+    this.checkMuted();
+    this.player_.volume(this.calculateDistance(event));
+  }
+
+  checkMuted() {
     if (this.player_.muted()) {
       this.player_.muted(false);
     }
-
-    this.player_.volume(this.calculateDistance(event));
   }
 
   /**
@@ -59,9 +63,8 @@ class VolumeBar extends Slider {
   getPercent() {
     if (this.player_.muted()) {
       return 0;
-    } else {
-      return this.player_.volume();
     }
+    return this.player_.volume();
   }
 
   /**
@@ -70,6 +73,7 @@ class VolumeBar extends Slider {
    * @method stepForward
    */
   stepForward() {
+    this.checkMuted();
     this.player_.volume(this.player_.volume() + 0.1);
   }
 
@@ -79,6 +83,7 @@ class VolumeBar extends Slider {
    * @method stepBack
    */
   stepBack() {
+    this.checkMuted();
     this.player_.volume(this.player_.volume() - 0.1);
   }
 
@@ -89,7 +94,8 @@ class VolumeBar extends Slider {
    */
   updateARIAAttributes() {
     // Current value of volume bar as a percentage
-    let volume = (this.player_.volume() * 100).toFixed(2);
+    const volume = (this.player_.volume() * 100).toFixed(2);
+
     this.el_.setAttribute('aria-valuenow', volume);
     this.el_.setAttribute('aria-valuetext', volume + '%');
   }
@@ -97,10 +103,10 @@ class VolumeBar extends Slider {
 }
 
 VolumeBar.prototype.options_ = {
-  children: {
-    'volumeLevel': {}
-  },
-  'barName': 'volumeLevel'
+  children: [
+    'volumeLevel'
+  ],
+  barName: 'volumeLevel'
 };
 
 VolumeBar.prototype.playerEvent = 'volumechange';

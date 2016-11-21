@@ -3,10 +3,9 @@ module.exports = function(config) {
   var settings = {
     basePath: '',
 
-    frameworks: ['browserify', 'qunit'],
+    frameworks: ['browserify', 'qunit', 'detectBrowsers'],
     autoWatch: false,
     singleRun: true,
-    browsers: ['Chrome'],
 
     // Compling tests here
     files: [
@@ -14,6 +13,8 @@ module.exports = function(config) {
       '../build/temp/ie8/videojs-ie8.min.js',
       '../test/globals-shim.js',
       '../test/unit/**/*.js',
+      '../build/temp/browserify.js',
+      '../build/temp/webpack.js',
       { pattern: '../src/**/*.js', watched: true, included: false, served: false }
     ],
 
@@ -29,12 +30,8 @@ module.exports = function(config) {
 
     browserify: {
       debug: true,
-      transform: [
-        require('babelify').configure({
-          sourceMapRelative: './',
-          loose: ['all']
-        })
-      ]
+      plugin: ['proxyquireify/plugin'],
+      transform: ['babelify']
     },
 
     plugins: [
@@ -43,12 +40,17 @@ module.exports = function(config) {
       'karma-firefox-launcher',
       'karma-ie-launcher',
       'karma-opera-launcher',
-      'karma-phantomjs-launcher',
       'karma-safari-launcher',
       'karma-browserstack-launcher',
       'karma-browserify',
-      'karma-coverage'
+      'karma-coverage',
+      'karma-detect-browsers',
     ],
+
+    detectBrowsers: {
+      enabled: false,
+      usePhantomJS: false
+    },
 
     reporters: ['dots'],
 
@@ -59,12 +61,12 @@ module.exports = function(config) {
     runnerPort: 9100,
     colors: true,
     logLevel: config.LOG_INFO,
-    captureTimeout: 60000,
-    browserNoActivityTimeout: 60000,
+    captureTimeout: 300000,
+    browserNoActivityTimeout: 300000,
 
     browserStack: {
       name: process.env.TRAVIS_BUILD_NUMBER + process.env.TRAVIS_BRANCH,
-      pollingTimeout: 10000
+      pollingTimeout: 30000
     },
     customLaunchers: getCustomLaunchers(),
 
@@ -87,10 +89,16 @@ module.exports = function(config) {
     }
   };
 
-  if (process.env.TRAVIS) {
+  // Coverage reporting
+  // Coverage is enabled by passing the flag --coverage to npm test
+  var coverageFlag = process.env.npm_config_coverage;
+  var reportCoverage = process.env.TRAVIS || coverageFlag;
+  if (reportCoverage) {
     settings.browserify.transform.push('browserify-istanbul');
     settings.reporters.push('coverage');
+  }
 
+  if (process.env.TRAVIS) {
     if (process.env.BROWSER_STACK_USERNAME) {
       settings.browsers = [
         'chrome_bs',
